@@ -10,16 +10,11 @@ yarn add serverless-plugin-ignitor --dev
 
 ## Usage
 
-In the serverless file, add your configuration in a custom variable named ignitor. Also include `serverless-plugin-ignitor` within the plugins.
+In the serverless file, add `serverless-plugin-ignitor` within the plugins entry.
 
 Example:
 
 ```yaml
-custom: 
-  ignitor:
-    functions:
-      - hello # function key name
-
 functions:
   hello:
     handler: src/hello.handler
@@ -29,7 +24,7 @@ plugins:
   - serverless-plugin-ignitor
 ```
 
-All functions defined in the functions list will then be automatically scheduled, automatically wrapped to accept scheduled events, and immediately invoked post-deployment.  
+By default all functions will then be automatically scheduled, wrapped to accept scheduled events, and immediately invoked post-deployment. If you want more granular control, options can be configured within a custom ignitor variable.
 
 ## Options
 
@@ -38,7 +33,7 @@ The plugin provides the following configurations.
 | Option | Values | Default | Description  |
 | :--- | :--- | :--- | :--- |
 | `schedule` | Boolean | true | Control whether the lambda should be ignited every 5 minutes |
-| `functions` | mixed[], String or RegExp | [] | Which functions to perform wrapping, and immediate calls to post-deployment |
+| `functions` | mixed[], String or RegExp | ['/.*/'] | Which functions to perform wrapping, and immediate calls to post-deployment |
 
 #### Options Example
 
@@ -47,7 +42,7 @@ custom:
   ignitor:
     schedule: false # do not schedule events
     functions:
-      - /hello/ # wrap code and call once deployed
+      - /hello/ # only wrap functions listed
 
 functions:
   hello:
@@ -80,8 +75,6 @@ Calls per day: `288`
 Calls per month: `8640`
 
 
-Total monthly cost per-lambda: `$0.01613088`
+Total monthly cost per-lambda: `$0.016`
 
 _**Prices calculated using the following aws information  [here](https://aws.amazon.com/lambda/pricing/)._
-
-

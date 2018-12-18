@@ -21,7 +21,9 @@ const SCHEDULE_IGNITOR_EVENT = {
 
 const DEFAULT_OPTIONS = {
   schedule: true,
-  functions: [],
+  functions: [
+    '/.*/',
+  ],
 };
 
 // !!WARNING!! Do not include a '.' in the directory name 

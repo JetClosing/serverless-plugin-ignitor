@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generates expected output 1`] = `
+"const original = require('../foo');
+
+module.exports['handler'] = function (evt, ctx, cb) {
+  if (evt.source === 'aws.events') {
+    return cb(null, 'pinged');
+  }
+
+  return original.handler(evt, ctx, cb);
+};"
+`;

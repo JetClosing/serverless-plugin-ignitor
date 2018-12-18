@@ -1,0 +1,21 @@
+service: serverless-plugin-ignitor-example
+
+custom: 
+  ignitor:
+    functions:
+      - hello
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-west-2 
+  package:
+    individually: true
+
+functions:
+  hello:
+    handler: handlers.hello
+    timeout: 10
+
+plugins:
+  - serverless-plugin-ignitor

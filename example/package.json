@@ -1,0 +1,14 @@
+{
+  "name": "serverless-plugin-ignitor-example",
+  "version": "1.0.0",
+  "description": "Showing how serverless-plugin-ignitor can be used",
+  "scripts": {
+    "deploy": "sls deploy",
+    "local:ignitor": "sls invoke local -f hello -p fixtures/ignitor.json",
+    "local": "sls invoke local -f hello -p fixtures/event.json"
+  },
+  "devDependencies": {
+    "serverless": "^1.35.0",
+    "serverless-plugin-ignitor": "file:.."
+  }
+}

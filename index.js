@@ -1,44 +1,20 @@
-'use strict';
 const bPromise = require('bluebird');
 const path = require('path');
 
 const utils = require('./libs/utils');
-const template = require('./libs/template');
-
-const IGNITOR_EVENT = JSON.stringify({
-  "ignitor": true
-});
-
-const SCHEDULE_IGNITOR_EVENT = {
-  "schedule": {
-    "rate": "rate(5 minutes)",
-    "enabled": true,
-    "input": {
-      "ignitor": true,
-    }
-  }
-};
-
-const DEFAULT_OPTIONS = {
-  schedule: true,
-  functions: [
-    '/.*/',
-  ],
-};
-
-// !!WARNING!! Do not include a '.' in the directory name 
-const PACKAGE_DIR = 'ignitor';
-
-const invokeRemote = (functionName, stage) => () => {
-  utils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
-};
+const build = require('./libs/build');
+const deploy = require('./libs/deploy').deploy;
 
 class IgnitorPlugin {
   constructor(sls, options) {
     this.sls = sls;
     this.stage = options.stage;
     this.originalServicePath = this.sls.config.servicePath;
-    this.packageDir = path.resolve(this.originalServicePath, PACKAGE_DIR);
+
+    // if this is a local invoke, don't wrap everything
+    // provide a short list of the function being called
+    const localOptions = options.f || options.function;
+    this.local = localOptions ? [localOptions] : null;
 
     this.commands = {
       ignitor: {
@@ -118,96 +94,49 @@ class IgnitorPlugin {
   }
 
   options() {
-    const options = {
-      ...DEFAULT_OPTIONS,
-      ...this.sls.service.custom.ignitor,
-    };
-
-    const { functions } = options;
-
-    // convert non-regex strings and regex strings into RegExp
-    const expressions = functions.map((entry) => {
-      const regexsplit = entry.split(/(?<!\\)\//);
-      // found non-regex entry
-      if (regexsplit.length === 1) {
-        return new RegExp(entry);
-      }
-
-      const [ignore, regExp, flags] = regexsplit;
-      return new RegExp(regExp, flags);
-    });
-
-    // find matching functions
-    const slsFunctions = Object.keys(this.sls.service.functions);
-    const matches = expressions.reduce((acc, entry) => {
-      for (let slsEntry of slsFunctions) {
-        if (slsEntry.match(entry)) {
-          acc.push(slsEntry);
-        }
-      }
-      return acc;
-    }, []);
-
-    return {
-      ...options,
-      functions: matches.filter((value, i, self) => self.indexOf(value) === i),
-    };
+    const slsOptions = this.sls.service.custom.ignitor;
+    const slsFunctions = this.local || Object.keys(this.sls.service.functions);
+    return build.functions(this.originalServicePath, slsFunctions, slsOptions);
   }
 
   schedule() {
-    const { functions, schedule } = this.options();
-    if (!schedule) {
-      return;
-    }
+    const options = this.options();
+    const slsFunctionRef = this.sls.service.functions;
 
     this.sls.cli.log('Scheduling ignitor functions...');
-    for (let name of functions) {
-      this.sls.service.functions[name].events.push(SCHEDULE_IGNITOR_EVENT)
+    for (const option of options) {
+      build.schedule(slsFunctionRef, option);
     }
   }
 
   wrap() {
-    const { functions } = this.options();
+    const options = this.options();
+    const slsFunctionRef = this.sls.service.functions;
+    const slsCli = this.sls.cli;
 
-    // make packageDir where wrappers are placed
-    utils.mkdir(this.packageDir);
-    
-    this.sls.cli.log('Wrapping ignitor functions...');
-    const names = Object.keys(this.sls.service.functions).filter((name) => functions.indexOf(name) !== -1);
-    for (const name of names) {
-      this.wrapFunction(name);
+    build.prebuild();
+
+    this.sls.cli.log('Scheduling ignitor functions...');
+    for (const option of options) {
+      build.wrap(slsFunctionRef, slsCli, option);
     }
-  }
-  
-  wrapFunction(name) {
-    const config = this.sls.service.functions[name];
-    this.sls.cli.log(`Wrapped ${config.handler}`);
-
-    // paths are constructed like <path>.<module> 
-    const [relativePath, module] = config.handler.split('.');
-    const handlerPath = `${PACKAGE_DIR}/${name}.handler`;
-    const handlerFileName = `${name}.js`;
-    const wrappedFilePath = path.resolve(PACKAGE_DIR, handlerFileName);
-    const wrapperCode = template.generate(relativePath, module);
-
-    // write wrapped code to wrappedFilePath
-    utils.write(wrappedFilePath, wrapperCode);
-
-    // update handler path
-    this.sls.service.functions[name].handler = handlerPath;
   }
 
   deploy() {
-    const { functions } = this.options();
+    const options = this.options();
 
-    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(functions)}`);
-    for (const func of functions) {
-      setTimeout(invokeRemote(func, this.stage), 1500);
+    const allFunctions = this.local || options.reduce((acc, options) => acc.concat(options.functions), []);
+    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(allFunctions)}`);
+    for (const option of options) {
+      const { functions, event } = option;
+      for (const name of functions) {
+        deploy(name, event, this.stage);
+      }
     }
   }
 
   clean() {
-    utils.rm(this.packageDir);
+    build.clean();
   }
   
 }

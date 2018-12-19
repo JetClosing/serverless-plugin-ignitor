@@ -28,29 +28,48 @@ By default all functions will then be automatically scheduled, wrapped to accept
 
 ## Options
 
-The plugin provides the following configurations.
+The plugin provides the following on a **per-function** configurations.
 
 | Option | Values | Default | Description  |
 | :--- | :--- | :--- | :--- |
 | `schedule` | Boolean | true | Control whether the lambda should be ignited every 5 minutes |
-| `functions` | mixed[], String or RegExp | ['/.*/'] | Which functions to perform wrapping, and immediate calls to post-deployment |
+| `name` | String or RegExp | '.*' | Which function name to perform wrapping, and immediate calls to during post-deployment |
+| `wrapper` | File Path | null | An override for the wrapper function, please include the extname |
+| `event` | Object | `{ "ignitor": true }` | The event that is used during scheduled events, and post deployment |
 
-#### Options Example
-
+#### Options Example 
 ```yaml
 custom: 
   ignitor:
-    schedule: false # do not schedule events
     functions:
-      - /hello/ # only wrap functions listed
+      - name: /HI/i
+        schedule: false
+      - name: bye
+        schedule: true
+        wrapper: ./deprecated.js
+        event: 
+          french: 'Au revoir'
 
 functions:
-  hello:
-    handler: src/hello.handler
+  hi:
+    handler: src/handler.hello
     timeout: 15
+    
+  bye:
+    handler: src/handler.goodbye
 
 plugins:
   - serverless-plugin-ignitor
+```
+
+## Custom Wrappers
+When writing a custom wrapper, please remember to keep it lightweight, and follow the naming convention of `wrapper` for your function. The override will be read directly as utf8 and the original handler and exporting of your wrapper will be done for you, making it quick and painless to write.
+
+Example:
+```
+const wrapper = (original) => (event, context, callback) => {
+    callback('This lambda has been deprecated');
+};
 ```
 
 ## Plugin Conflicts

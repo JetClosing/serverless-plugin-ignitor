@@ -1,6 +1,9 @@
 .serverless
 /node_modules/
 
+# ignore ignitor builds
+ignitor
+
 # Ignore lock files
 package-lock.json
 yarn.lock

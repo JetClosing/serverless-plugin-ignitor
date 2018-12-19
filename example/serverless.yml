@@ -3,19 +3,38 @@ service: serverless-plugin-ignitor-example
 custom: 
   ignitor:
     functions:
-      - hello
+      - name: /hello/
+        schedule: true
+        wrapper: ./deprecated.js
+        event: 
+          pinging: 'here'
+      - name: goodbye
+        schedule: true
+      - name: runOnce
+        schedule: false
+  webpack:
+    includeModules: false
+    packager: 'yarn'
+        
+package:
+  individually: true
 
 provider:
   name: aws
   runtime: nodejs8.10
   region: us-west-2 
-  package:
-    individually: true
 
 functions:
   hello:
     handler: handlers.hello
     timeout: 10
 
+  goodbye:
+    handler: handlers.goodbye
+
+  runOnce:
+    handler: handlers.runOnce
+
 plugins:
   - serverless-plugin-ignitor
+  - serverless-webpack

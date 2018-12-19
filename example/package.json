@@ -4,11 +4,19 @@
   "description": "Showing how serverless-plugin-ignitor can be used",
   "scripts": {
     "deploy": "sls deploy",
-    "local:ignitor": "sls invoke local -f hello -p fixtures/ignitor.json",
+    "local:hello": "sls invoke local --function hello",
+    "local:goodbye": "sls invoke local -f goodbye --p fixtures/ignitor.json",
+    "local:once": "sls invoke local -f runOnce",
     "local": "sls invoke local -f hello -p fixtures/event.json"
   },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.0",
+    "babel-loader": "^8.0.4",
     "serverless": "^1.35.0",
-    "serverless-plugin-ignitor": "file:.."
+    "serverless-plugin-ignitor": "../",
+    "serverless-webpack": "^5.2.0",
+    "webpack": "^4.28.0",
+    "webpack-node-externals": "^1.7.2"
   }
 }

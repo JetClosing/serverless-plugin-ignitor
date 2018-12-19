@@ -5,5 +5,12 @@ test('function exported', () => {
 });
 
 test('generates expected output', () => {
-  expect(template.generate('foo', 'handler')).toMatchSnapshot();
+  expect(template.generate('foo', 'handler', 'foo')).toMatchSnapshot();
+});
+
+test('generate overriden wrapper', () => {
+  const override = `const wrapper = (original) => (evt, ctx, cb) => {
+    cb('exit early');
+  }`;
+  expect(template.generate('foo', 'handler', 'help', override)).toMatchSnapshot();
 });

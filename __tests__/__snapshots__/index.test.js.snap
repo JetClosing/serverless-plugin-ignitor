@@ -1,0 +1,122 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IgnitorPlugin 1`] = `
+IgnitorPlugin {
+  "commands": Object {
+    "ignitor": Object {
+      "commands": Object {
+        "clean": Object {
+          "lifecycleEvents": Array [
+            "clean",
+          ],
+          "type": "entrypoint",
+        },
+        "deploy": Object {
+          "lifecycleEvents": Array [
+            "deploy",
+          ],
+          "type": "entrypoint",
+        },
+        "schedule": Object {
+          "lifecycleEvents": Array [
+            "schedule",
+          ],
+          "type": "entrypoint",
+        },
+        "wrap": Object {
+          "lifecycleEvents": Array [
+            "wrap",
+          ],
+          "type": "entrypoint",
+        },
+      },
+      "lifecycleEvents": Array [
+        "ignitor",
+      ],
+      "usage": "Keep lambda functions nice and toasty",
+    },
+  },
+  "hooks": Object {
+    "after:deploy:deploy": [Function],
+    "after:invoke:local:invoke": [Function],
+    "after:package:createDeploymentArtifacts": [Function],
+    "after:run:run": [Function],
+    "before:deploy:function:packageFunction": [Function],
+    "before:invoke:local:invoke": [Function],
+    "before:package:createDeploymentArtifacts": [Function],
+    "before:run:run": [Function],
+    "ignitor:clean:clean": [Function],
+    "ignitor:deploy:deploy": [Function],
+    "ignitor:schedule:schedule": [Function],
+    "ignitor:wrap:wrap": [Function],
+  },
+  "local": null,
+  "originalServicePath": "/Users/chris/Desktop/serverless-plugin-ignitor/__tests__",
+  "sls": Object {
+    "cli": Object {
+      "log": [MockFunction],
+    },
+    "config": Object {
+      "servicePath": "/Users/chris/Desktop/serverless-plugin-ignitor/__tests__",
+    },
+    "pluginManager": [MockFunction],
+    "service": Object {
+      "custom": Object {
+        "ignitor": Object {
+          "functions": Array [
+            Object {
+              "name": ".*",
+              "schedule": true,
+            },
+          ],
+        },
+      },
+      "functions": Object {
+        "hello": Object {
+          "events": Array [],
+          "handler": "src/handlers.default",
+        },
+      },
+      "name": "test",
+    },
+  },
+  "stage": "test",
+}
+`;
+
+exports[`IgnitorPlugin 2`] = `
+Array [
+  Object {
+    "event": Object {
+      "ignitor": true,
+    },
+    "functions": Array [
+      "hello",
+    ],
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": null,
+  },
+]
+`;
+
+exports[`IgnitorPlugin 3`] = `
+Array [
+  Object {
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+  },
+]
+`;
+
+exports[`IgnitorPlugin 4`] = `"ignitor/hello.handler"`;

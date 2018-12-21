@@ -4,6 +4,7 @@ const fs = require('fs');
 
 jest.mock('../libs/deploy');
 
+// weird that this throws, commenting to see if travisCI picks up the changes
 const exists = (filename) => {
   try {
     return fs.existsSync(filename); // existsSync throws if the file doesn't exist

@@ -2,16 +2,17 @@ service: serverless-plugin-ignitor-example
 
 custom: 
   ignitor:
-    functions:
-      - name: /hello/
-        schedule: true
-        wrapper: ./deprecated.js
-        event: 
+    - name: /hello/
+      wrapper: ./deprecated.js
+      schedule: 
+        rate: rate(3 minutes)
+        enabled: true
+        input: 
           pinging: 'here'
-      - name: goodbye
-        schedule: true
-      - name: runOnce
-        schedule: false
+    - name: goodbye
+      schedule: true
+    - name: runOnce
+      schedule: false
   webpack:
     includeModules: false
     packager: 'yarn'

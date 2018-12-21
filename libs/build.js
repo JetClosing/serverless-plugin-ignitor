@@ -3,28 +3,25 @@ const utils = require('./utils');
 const template = require('./template');
 const memo = require('./memo').memo;
 
-const DEFAULT_IGNITOR_EVENT = {
-  "ignitor": true,
-}
-
 const DEFAULT_FUNCTION_OPTIONS = {
   name: '.*',
   schedule: true,
 }
 
-const DEFAULT_IGNITOR_SCHEDULE = {
+const DEFAULT_SCHEDULE = {
   rate: 'rate(5 minutes)',
   enabled: true,
-  input: DEFAULT_IGNITOR_EVENT
-};
+  input: {
+    ignitor: true,
+  }
+}
 
-const DEFAULT_OPTIONS = {
-  functions: [
-    DEFAULT_FUNCTION_OPTIONS,
-  ],
-};
+const DEFAULT_OPTIONS = [
+  DEFAULT_FUNCTION_OPTIONS,
+];
 
-// !!WARNING!! Do not include a '.' in the directory name 
+// !!WARNING!! Do not include a '.' in the directory name, this fails to load the module
+// due to the leading period causing module resolution issues.
 const PACKAGE_DIR = 'ignitor';
 
 const resolveWrapper = (servicePath, wrapper) => {
@@ -40,25 +37,25 @@ const buildRegex = (name) => {
   if (regexsplit.length === 1) {
     return new RegExp(name);
   }
-  const [ignore, regExp, flags] = regexsplit;
+  const [, regExp, flags] = regexsplit;
   return new RegExp(regExp, flags);
 };
 
-const buildScheduledEvents = (schedule, event) => {
-  const finalEvent = event || DEFAULT_IGNITOR_EVENT;
-  const scheduledEvent = {
-    rate: 'rate(5 minutes)',
-    enabled: true,
-    input: finalEvent
-  };
-  return {
-    schedule: schedule ? scheduledEvent : null,
-    event: finalEvent,
+const buildSchedule = (schedule) => {
+  // if user specifically set schedule to true or they didn't set any overrides
+  // we know they wanted a manual schedule to be created
+  if (schedule === null || schedule === true) {
+    return DEFAULT_SCHEDULE;
   }
+
+  // if the user sets schedule to false, that's fine, this will only inject
+  // the schedule if the schedule value is truthy anyway, otherwise if they have
+  // defined a schedule manually, then let it passthrough
+  return schedule;
 };
 
 const buildFunctionOptions = (servicePath, slsFunctions, option) => {
-  const { name, schedule, wrapper, event } = option;
+  const { name, schedule, wrapper } = option;
     
   const matcher = buildRegex(name);
   const functions = slsFunctions.reduce((acc, slsFunction) => {
@@ -68,37 +65,32 @@ const buildFunctionOptions = (servicePath, slsFunctions, option) => {
     return acc;
   }, []);
 
-  const scheduled = buildScheduledEvents(schedule, event);
   return {
-    functions,
     wrapper: resolveWrapper(servicePath, wrapper),
-    ...scheduled,
+    schedule: buildSchedule(schedule),
+    functions,
   };
 }
 
 const buildFunctions = (servicePath, slsFunctions, slsOptions) => {
-  const options = {
-    ...DEFAULT_OPTIONS,
-    ...slsOptions,
-  };
+  const options = slsOptions || DEFAULT_OPTIONS;
 
-  const { functions } = options;
-  return functions.map((option) => buildFunctionOptions(servicePath, slsFunctions, option));
+  return options.map((option) => buildFunctionOptions(servicePath, slsFunctions, option));
 };
 
-const injectSchedule = (slsFunctions, builtOptions) => {
+const injectSchedule = (slsFunctionsRef, builtOptions) => {
   const { functions, schedule } = builtOptions;
   if (schedule) {
     for (const name of functions) {
-      slsFunctions[name].events.push({ schedule });
+      slsFunctionsRef[name].events.push({ schedule });
     }
   }
 };
 
-const wrapCode = (slsFunctions, cli, builtOptions) => {
+const wrapCode = (slsFunctionsRef, cli, builtOptions) => {
   const { functions, wrapper } = builtOptions;
   for (const name of functions) {
-    const { handler } = slsFunctions[name];
+    const { handler } = slsFunctionsRef[name];
     cli.log(`Wrapped ${handler}`);
 
     // paths are constructed like <path>.<module> 
@@ -112,7 +104,7 @@ const wrapCode = (slsFunctions, cli, builtOptions) => {
     utils.write(wrappedFilePath, wrapperCode);
 
     // update handler path
-    slsFunctions[name].handler = handlerPath;
+    slsFunctionsRef[name].handler = handlerPath;
   }
 };
 

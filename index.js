@@ -1,7 +1,6 @@
 const bPromise = require('bluebird');
 const path = require('path');
 
-const utils = require('./libs/utils');
 const build = require('./libs/build');
 const deploy = require('./libs/deploy').deploy;
 
@@ -95,37 +94,39 @@ class IgnitorPlugin {
 
   options() {
     const slsOptions = this.sls.service.custom.ignitor;
+    const slsFunctionRef = this.sls.service.functions;
     const slsFunctions = this.local || Object.keys(this.sls.service.functions);
-    return build.functions(this.originalServicePath, slsFunctions, slsOptions);
-  }
+    return {
+      functionOptions: build.functions(this.originalServicePath, slsFunctions, slsOptions),
+      slsFunctionRef,
+    };
+  } 
 
   schedule() {
-    const options = this.options();
-    const slsFunctionRef = this.sls.service.functions;
+    const { slsFunctionRef, functionOptions } = this.options();
 
     this.sls.cli.log('Scheduling ignitor functions...');
-    for (const option of options) {
-      build.schedule(slsFunctionRef, option);
+    for (const options of functionOptions) {
+      build.schedule(slsFunctionRef, options);
     }
   }
 
   wrap() {
-    const options = this.options();
-    const slsFunctionRef = this.sls.service.functions;
+    const { slsFunctionRef, functionOptions } = this.options();
     const slsCli = this.sls.cli;
 
     build.prebuild();
 
-    this.sls.cli.log('Scheduling ignitor functions...');
-    for (const option of options) {
+    this.sls.cli.log('Wrapping ignitor functions...');
+    for (const option of functionOptions) {
       build.wrap(slsFunctionRef, slsCli, option);
     }
   }
 
   deploy() {
-    const options = this.options();
+    const { functionOptions } = this.options();
 
-    const allFunctions = this.local || options.reduce((acc, options) => acc.concat(options.functions), []);
+    const allFunctions = this.local || functionOptions.reduce((acc, options) => acc.concat(options.functions), []);
     this.sls.cli.log(`Igniting source(s) ${JSON.stringify(allFunctions)}`);
     for (const option of options) {
       const { functions, event } = option;

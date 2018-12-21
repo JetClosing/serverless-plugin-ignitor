@@ -1,6 +1,6 @@
 const utils = require('./utils');
 
-const DEPLOYMENT_DELAY = 1500;
+const DEPLOYMENT_DELAY = 3000;
 
 const invoke = (functionName, event, stage) => () => {
   utils.cli(`sls invoke -f ${functionName} --data '${event}' -s ${stage}`);

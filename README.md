@@ -34,7 +34,7 @@ The plugin provides the following on a **per-function** configurations.
 | :--- | :--- | :--- | :--- |
 | `schedule` | Boolean | true | Control whether the lambda should be ignited every 5 minutes |
 | `name` | String or RegExp | '.*' | Which function name to perform wrapping, and immediate calls to during post-deployment |
-| `wrapper` | File Path | null | An override for the wrapper function, please include the extname |
+| `wrapper` | String | null | An override for the wrapper function, please include the extname |
 | `event` | Object | `{ "ignitor": true }` | The event that is used during scheduled events, and post deployment |
 
 #### Options Example 

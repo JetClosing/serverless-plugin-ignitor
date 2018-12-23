@@ -4,7 +4,7 @@ exports[`generates expected output 1`] = `
 "const original = require('../foo');
 
 module.exports['handler'] = function (evt, ctx, cb) {
-  if (evt.source === 'aws.events') {
+  if (evt.ignitor) {
     return cb(null, 'pinged');
   }
 

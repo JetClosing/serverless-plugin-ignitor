@@ -1,6 +1,9 @@
 # Node Modules
 node_modules
 
+# coverage
+coverage
+
 # Ignore lock files
 package-lock.json
 yarn.lock

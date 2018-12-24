@@ -4,9 +4,8 @@ node_modules
 # coverage
 coverage
 
-# Ignore lock files
+# Ignore unwanted locks
 package-lock.json
-yarn.lock
 
 # Ignore VS Code workspace
 *.code-workspace

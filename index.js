@@ -1,9 +1,8 @@
 'use strict';
 const bPromise = require('bluebird');
-const path = require('path');
 
-const utils = require('./libs/utils');
-const template = require('./libs/template');
+const build = require('./libs/build');
+const fileUtils = require('./libs/fileUtils');
 
 const IGNITOR_EVENT = JSON.stringify({
   "ignitor": true
@@ -22,23 +21,20 @@ const SCHEDULE_IGNITOR_EVENT = {
 const DEFAULT_OPTIONS = {
   schedule: true,
   functions: [
-    '/.*/',
+    '.*',
   ],
 };
 
-// !!WARNING!! Do not include a '.' in the directory name 
-const PACKAGE_DIR = 'ignitor';
-
 const invokeRemote = (functionName, stage) => () => {
-  utils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
+  fileUtils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
 };
 
 class IgnitorPlugin {
   constructor(sls, options) {
     this.sls = sls;
     this.stage = options.stage;
+    this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
-    this.packageDir = path.resolve(this.originalServicePath, PACKAGE_DIR);
 
     this.commands = {
       ignitor: {
@@ -107,13 +103,14 @@ class IgnitorPlugin {
         .then(this.schedule),
 
       'ignitor:wrap:wrap': () => bPromise.bind(this)
+        .then(build.prebuild)
         .then(this.wrap),
 
       'ignitor:deploy:deploy': () => bPromise.bind(this)
         .then(this.deploy),
 
       'ignitor:clean:clean': () => bPromise.bind(this)
-        .then(this.clean),
+        .then(build.clean),
     };
   }
 
@@ -168,33 +165,16 @@ class IgnitorPlugin {
 
   wrap() {
     const { functions } = this.options();
-
-    // make packageDir where wrappers are placed
-    utils.mkdir(this.packageDir);
     
     this.sls.cli.log('Wrapping ignitor functions...');
     const names = Object.keys(this.sls.service.functions).filter((name) => functions.indexOf(name) !== -1);
     for (const name of names) {
-      this.wrapFunction(name);
+      const { handler } = this.sls.service.functions[name];
+      this.sls.cli.log(`Wrapped ${handler}`);
+
+      // update handler path
+      this.sls.service.functions[name].handler = build.wrap(name, handler, undefined, this.verbose);
     }
-  }
-  
-  wrapFunction(name) {
-    const config = this.sls.service.functions[name];
-    this.sls.cli.log(`Wrapped ${config.handler}`);
-
-    // paths are constructed like <path>.<module> 
-    const [relativePath, module] = config.handler.split('.');
-    const handlerPath = `${PACKAGE_DIR}/${name}.handler`;
-    const handlerFileName = `${name}.js`;
-    const wrappedFilePath = path.resolve(PACKAGE_DIR, handlerFileName);
-    const wrapperCode = template.generate(relativePath, module);
-
-    // write wrapped code to wrappedFilePath
-    utils.write(wrappedFilePath, wrapperCode);
-
-    // update handler path
-    this.sls.service.functions[name].handler = handlerPath;
   }
 
   deploy() {
@@ -204,10 +184,6 @@ class IgnitorPlugin {
     for (const func of functions) {
       setTimeout(invokeRemote(func, this.stage), 1500);
     }
-  }
-
-  clean() {
-    utils.rm(this.packageDir);
   }
   
 }

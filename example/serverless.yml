@@ -4,6 +4,9 @@ custom:
   ignitor:
     functions:
       - hello
+  webpack:
+    includeModules: false
+    packager: 'yarn'
 
 provider:
   name: aws
@@ -16,6 +19,9 @@ functions:
   hello:
     handler: handlers.hello
     timeout: 10
+  goodbye:
+    handler: handlers.goodbye
 
 plugins:
   - serverless-plugin-ignitor
+  - serverless-webpack

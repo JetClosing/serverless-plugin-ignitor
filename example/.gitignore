@@ -1,6 +1,12 @@
 .serverless
 /node_modules/
 
+# Ignore ignitor
+ignitor
+
+# Ignore webpack
+.webpack
+
 # Ignore lock files
 package-lock.json
 yarn.lock

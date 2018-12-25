@@ -33,6 +33,7 @@ class IgnitorPlugin {
   constructor(sls, options) {
     this.sls = sls;
     this.stage = options.stage;
+    this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
 
     this.commands = {
@@ -168,16 +169,12 @@ class IgnitorPlugin {
     this.sls.cli.log('Wrapping ignitor functions...');
     const names = Object.keys(this.sls.service.functions).filter((name) => functions.indexOf(name) !== -1);
     for (const name of names) {
-      this.wrapFunction(name);
-    }
-  }
-  
-  wrapFunction(name) {
-    const { handler } = this.sls.service.functions[name];
-    this.sls.cli.log(`Wrapped ${handler}`);
+      const { handler } = this.sls.service.functions[name];
+      this.sls.cli.log(`Wrapped ${handler}`);
 
-    // update handler path
-    this.sls.service.functions[name].handler = build.wrap(name, handler);
+      // update handler path
+      this.sls.service.functions[name].handler = build.wrap(name, handler, undefined, this.verbose);
+    }
   }
 
   deploy() {

@@ -5,8 +5,8 @@ const build = require('./libs/build');
 const fileUtils = require('./libs/fileUtils');
 const optionUtils = require('./libs/optionUtils');
 
-const invokeRemote = (functionName, stage) => () => {
-  fileUtils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
+const invokeRemote = (functionName, event, stage) => () => {
+  fileUtils.cli(`sls invoke -f ${functionName} --data '${JSON.stringify(event)}' -s ${stage}`);
 };
 
 class IgnitorPlugin {
@@ -15,6 +15,12 @@ class IgnitorPlugin {
     this.stage = options.stage;
     this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
+
+    // if this is a local invoke, don't wrap EVERYTHING
+    // provide a short list of the function being called
+    const localOptions = options.f || options.function;
+    this.slsFunctions = localOptions ? [localOptions] : Object.keys(this.sls.service.functions);
+    this.slsFunctionsRef = this.sls.service.functions;
 
     this.commands = {
       ignitor: {
@@ -96,44 +102,51 @@ class IgnitorPlugin {
 
   options() {
     const ignitorOptions = this.sls.service.custom.ignitor;
-    const slsFunctionRef = this.sls.service.functions;
     return optionUtils.build(ignitorOptions, this.slsFunctions);
-
-   
   }
 
   schedule() {
-    const { functions, schedule } = this.options();
-    if (!schedule) {
-      return;
-    }
+    const options = this.options();
 
     this.sls.cli.log('Scheduling ignitor functions...');
-    for (let name of functions) {
-      this.sls.service.functions[name].events.push(SCHEDULE_IGNITOR_EVENT)
+    for (let option of options) {
+      const { schedule, name } = option;
+      if (!schedule) {
+        continue;
+      }
+
+      this.sls.service.functions[name].events.push(schedule);
     }
   }
 
   wrap() {
-    const { functions } = this.options();
+    const options = this.options();
     
     this.sls.cli.log('Wrapping ignitor functions...');
-    const names = Object.keys(this.sls.service.functions).filter((name) => functions.indexOf(name) !== -1);
-    for (const name of names) {
-      const { handler } = this.sls.service.functions[name];
+    for (const option of options) {
+      const { name, wrapper } = option;
+
+      const { handler } = this.slsFunctionsRef[name];
       this.sls.cli.log(`Wrapped ${handler}`);
 
-      // update handler path
-      this.sls.service.functions[name].handler = build.wrap(name, handler, undefined, this.verbose);
+      this.slsFunctionsRef[name].handler = build.wrap(name, handler, wrapper, this.verbose);
     }
   }
 
   deploy() {
-    const { functions } = this.options();
+    const options = this.options();
+    // TODO: add ability to disable post-deploy invoke
+    const deployableFunctions = Object.keys(options);
 
-    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(functions)}`);
-    for (const func of functions) {
-      setTimeout(invokeRemote(func, this.stage), 1500);
+    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(deployableFunctions)}`);
+    for (let option of options) {
+      const { schedule, name } = option;
+      if (!schedule) {
+        continue;
+      }
+
+      const { input } = schedule;
+      setTimeout(invokeRemote(name, input, this.stage), 1500);
     }
   }
   

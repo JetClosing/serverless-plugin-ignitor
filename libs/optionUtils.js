@@ -42,17 +42,22 @@ const buildOption = (key, option, slsFunctions) => {
   const matcher = buildRegexFromKey(key);
   const schedule = buildScheduledEvent(option.schedule);
   const matches = slsFunctions.filter((slsFunctions) => slsFunctions.match(matcher));
-  return {
+  if (matches.length === 0) {
+    return [];
+  }
+  return matches.map((name) => ({
     wrapper: option.wrapper,
     schedule,
-    matches,
-  }
+    name,
+  }));
 };
 
 const build = (options = DEFAULT_OPTIONS, slsFunctions) => {
   const optionKeys = Object.keys(options);
-  const flattenedOptions = optionKeys.map((key) => buildOption(key, options[key], slsFunctions));
-  return flattenedOptions.filter((option) => option.matches.length > 0);
+  return optionKeys.reduce((acc, key) => {
+    const built = buildOption(key, options[key], slsFunctions);
+    return acc.concat(built);
+  }, []);
 };
 
 module.exports = {

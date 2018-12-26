@@ -2,12 +2,8 @@
 const bPromise = require('bluebird');
 
 const build = require('./libs/build');
-const fileUtils = require('./libs/fileUtils');
+const deploy = require('./libs/deploy');
 const optionUtils = require('./libs/optionUtils');
-
-const invokeRemote = (functionName, event, stage) => () => {
-  fileUtils.cli(`sls invoke -f ${functionName} --data '${JSON.stringify(event)}' -s ${stage}`);
-};
 
 class IgnitorPlugin {
   constructor(sls, options) {
@@ -109,7 +105,7 @@ class IgnitorPlugin {
     const options = this.options();
 
     this.sls.cli.log('Scheduling ignitor functions...');
-    for (let option of options) {
+    for (const option of options) {
       const { schedule, name } = option;
       if (!schedule) {
         continue;
@@ -139,14 +135,14 @@ class IgnitorPlugin {
     const deployableFunctions = Object.keys(options);
 
     this.sls.cli.log(`Igniting source(s) ${JSON.stringify(deployableFunctions)}`);
-    for (let option of options) {
+    for (const option of options) {
       const { schedule, name } = option;
       if (!schedule) {
         continue;
       }
 
       const { input } = schedule;
-      setTimeout(invokeRemote(name, input, this.stage), 1500);
+      deploy.deploy(name, input, this.stage);
     }
   }
   

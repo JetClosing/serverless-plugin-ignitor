@@ -3,30 +3,10 @@ const bPromise = require('bluebird');
 
 const build = require('./libs/build');
 const fileUtils = require('./libs/fileUtils');
+const optionUtils = require('./libs/optionUtils');
 
-const IGNITOR_EVENT = JSON.stringify({
-  "ignitor": true
-});
-
-const SCHEDULE_IGNITOR_EVENT = {
-  "schedule": {
-    "rate": "rate(5 minutes)",
-    "enabled": true,
-    "input": {
-      "ignitor": true,
-    }
-  }
-};
-
-const DEFAULT_OPTIONS = {
-  schedule: true,
-  functions: [
-    '.*',
-  ],
-};
-
-const invokeRemote = (functionName, stage) => () => {
-  fileUtils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
+const invokeRemote = (functionName, event, stage) => () => {
+  fileUtils.cli(`sls invoke -f ${functionName} --data '${JSON.stringify(event)}' -s ${stage}`);
 };
 
 class IgnitorPlugin {
@@ -40,6 +20,7 @@ class IgnitorPlugin {
     // provide a short list of the function being called
     const localOptions = options.f || options.function;
     this.slsFunctions = localOptions ? [localOptions] : Object.keys(this.sls.service.functions);
+    this.slsFunctionsRef = this.sls.service.functions;
 
     this.commands = {
       ignitor: {
@@ -120,74 +101,52 @@ class IgnitorPlugin {
   }
 
   options() {
-    const options = {
-      ...DEFAULT_OPTIONS,
-      ...this.sls.service.custom.ignitor,
-    };
-
-    const { functions } = options;
-
-    // convert non-regex strings and regex strings into RegExp
-    const expressions = functions.map((entry) => {
-      const regexsplit = entry.split(/(?<!\\)\//);
-      // found non-regex entry
-      if (regexsplit.length === 1) {
-        return new RegExp(entry);
-      }
-
-      const [, regExp, flags] = regexsplit;
-      return new RegExp(regExp, flags);
-    });
-
-    // find matching functions
-    const slsFunctions = this.slsFunctions;
-    const matches = expressions.reduce((acc, entry) => {
-      for (let slsEntry of slsFunctions) {
-        if (slsEntry.match(entry)) {
-          acc.push(slsEntry);
-        }
-      }
-      return acc;
-    }, []);
-
-    return {
-      ...options,
-      functions: matches.filter((value, i, self) => self.indexOf(value) === i),
-    };
+    const ignitorOptions = this.sls.service.custom.ignitor;
+    return optionUtils.build(ignitorOptions, this.slsFunctions);
   }
 
   schedule() {
-    const { functions, schedule } = this.options();
-    if (!schedule) {
-      return;
-    }
+    const options = this.options();
 
     this.sls.cli.log('Scheduling ignitor functions...');
-    for (let name of functions) {
-      this.sls.service.functions[name].events.push(SCHEDULE_IGNITOR_EVENT)
+    for (let option of options) {
+      const { schedule, name } = option;
+      if (!schedule) {
+        continue;
+      }
+
+      this.sls.service.functions[name].events.push(schedule);
     }
   }
 
   wrap() {
-    const { functions } = this.options();
+    const options = this.options();
     
     this.sls.cli.log('Wrapping ignitor functions...');
-    const names = this.slsFunctions.filter((name) => functions.indexOf(name) !== -1);
-    for (const name of names) {
-      const { handler } = this.sls.service.functions[name];
+    for (const option of options) {
+      const { name, wrapper } = option;
+
+      const { handler } = this.slsFunctionsRef[name];
       this.sls.cli.log(`Wrapped ${handler}`);
 
-      // update handler path
-      this.sls.service.functions[name].handler = build.wrap(name, handler, undefined, this.verbose);
+      this.slsFunctionsRef[name].handler = build.wrap(name, handler, wrapper, this.verbose);
     }
   }
 
   deploy() {
-    const { functions } = this.options();
+    const options = this.options();
+    // TODO: add ability to disable post-deploy invoke
+    const deployableFunctions = Object.keys(options);
 
-    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(functions)}`);
-    for (const func of functions) {
-      setTimeout(invokeRemote(func, this.stage), 1500);
+    this.sls.cli.log(`Igniting source(s) ${JSON.stringify(deployableFunctions)}`);
+    for (let option of options) {
+      const { schedule, name } = option;
+      if (!schedule) {
+        continue;
+      }
+
+      const { input } = schedule;
+      setTimeout(invokeRemote(name, input, this.stage), 1500);
     }
   }
   

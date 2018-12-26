@@ -2,8 +2,20 @@ service: serverless-plugin-ignitor-example
 
 custom: 
   ignitor:
-    functions:
-      - hello
+    hello:
+      wrapper: wrappers.logger
+      schedule:
+        rate: rate(5 minutes)
+        enabled: true
+        input: 
+          source: 'logger'
+
+    goodbye:
+      schedule: false
+
+    /.*Handler/i:
+      schedule: true
+      
   webpack:
     includeModules: false
     packager: 'yarn'

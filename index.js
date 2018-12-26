@@ -3,7 +3,6 @@ const bPromise = require('bluebird');
 
 const build = require('./libs/build');
 const deploy = require('./libs/deploy');
-const fileUtils = require('./libs/fileUtils');
 const optionUtils = require('./libs/optionUtils');
 
 class IgnitorPlugin {

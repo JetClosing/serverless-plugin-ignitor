@@ -36,6 +36,11 @@ class IgnitorPlugin {
     this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
 
+    // if this is a local invoke, don't wrap EVERYTHING
+    // provide a short list of the function being called
+    const localOptions = options.f || options.function;
+    this.slsFunctions = localOptions ? [localOptions] : Object.keys(this.sls.service.functions);
+
     this.commands = {
       ignitor: {
         usage: 'Keep lambda functions nice and toasty',
@@ -130,12 +135,12 @@ class IgnitorPlugin {
         return new RegExp(entry);
       }
 
-      const [ignore, regExp, flags] = regexsplit;
+      const [, regExp, flags] = regexsplit;
       return new RegExp(regExp, flags);
     });
 
     // find matching functions
-    const slsFunctions = Object.keys(this.sls.service.functions);
+    const slsFunctions = this.slsFunctions;
     const matches = expressions.reduce((acc, entry) => {
       for (let slsEntry of slsFunctions) {
         if (slsEntry.match(entry)) {
@@ -167,7 +172,7 @@ class IgnitorPlugin {
     const { functions } = this.options();
     
     this.sls.cli.log('Wrapping ignitor functions...');
-    const names = Object.keys(this.sls.service.functions).filter((name) => functions.indexOf(name) !== -1);
+    const names = this.slsFunctions.filter((name) => functions.indexOf(name) !== -1);
     for (const name of names) {
       const { handler } = this.sls.service.functions[name];
       this.sls.cli.log(`Wrapped ${handler}`);

@@ -111,7 +111,8 @@ class IgnitorPlugin {
         continue;
       }
 
-      this.sls.service.functions[name].events.push(schedule);
+      // this looks a little funny but we need to maintain the 'schedule' property name
+      this.slsFunctionsRef[name].events.push({ schedule: schedule });
     }
   }
 
@@ -131,9 +132,9 @@ class IgnitorPlugin {
 
   deploy() {
     const options = this.options();
-    // TODO: add ability to disable post-deploy invoke
-    const deployableFunctions = Object.keys(options);
 
+    // TODO: add ability to disable post-deploy invoke
+    const deployableFunctions = options.map((option) => option.name);
     this.sls.cli.log(`Igniting source(s) ${JSON.stringify(deployableFunctions)}`);
     for (const option of options) {
       const { schedule, name } = option;

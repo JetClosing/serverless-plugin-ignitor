@@ -3,27 +3,7 @@ const bPromise = require('bluebird');
 
 const build = require('./libs/build');
 const fileUtils = require('./libs/fileUtils');
-
-const IGNITOR_EVENT = JSON.stringify({
-  "ignitor": true
-});
-
-const SCHEDULE_IGNITOR_EVENT = {
-  "schedule": {
-    "rate": "rate(5 minutes)",
-    "enabled": true,
-    "input": {
-      "ignitor": true,
-    }
-  }
-};
-
-const DEFAULT_OPTIONS = {
-  schedule: true,
-  functions: [
-    '.*',
-  ],
-};
+const optionUtils = require('./libs/optionUtils');
 
 const invokeRemote = (functionName, stage) => () => {
   fileUtils.cli(`sls invoke -f ${functionName} --data '${IGNITOR_EVENT}' -s ${stage}`);
@@ -115,40 +95,11 @@ class IgnitorPlugin {
   }
 
   options() {
-    const options = {
-      ...DEFAULT_OPTIONS,
-      ...this.sls.service.custom.ignitor,
-    };
+    const ignitorOptions = this.sls.service.custom.ignitor;
+    const slsFunctionRef = this.sls.service.functions;
+    return optionUtils.build(ignitorOptions, this.slsFunctions);
 
-    const { functions } = options;
-
-    // convert non-regex strings and regex strings into RegExp
-    const expressions = functions.map((entry) => {
-      const regexsplit = entry.split(/(?<!\\)\//);
-      // found non-regex entry
-      if (regexsplit.length === 1) {
-        return new RegExp(entry);
-      }
-
-      const [ignore, regExp, flags] = regexsplit;
-      return new RegExp(regExp, flags);
-    });
-
-    // find matching functions
-    const slsFunctions = Object.keys(this.sls.service.functions);
-    const matches = expressions.reduce((acc, entry) => {
-      for (let slsEntry of slsFunctions) {
-        if (slsEntry.match(entry)) {
-          acc.push(slsEntry);
-        }
-      }
-      return acc;
-    }, []);
-
-    return {
-      ...options,
-      functions: matches.filter((value, i, self) => self.indexOf(value) === i),
-    };
+   
   }
 
   schedule() {

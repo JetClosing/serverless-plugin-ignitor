@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`build default path 1`] = `
+Array [
+  Object {
+    "name": "hello",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+  Object {
+    "name": "goodbye",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+  Object {
+    "name": "authHandler",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+]
+`;
+
+exports[`buildOption default options 1`] = `
+Array [
+  Object {
+    "name": "hello",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+  Object {
+    "name": "goodbye",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+  Object {
+    "name": "authHandler",
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "ignitor": true,
+      },
+      "rate": "rate(5 minutes)",
+    },
+    "wrapper": undefined,
+  },
+]
+`;
+
+exports[`buildRegexFromKey normal name 1`] = `/hello/`;
+
+exports[`buildRegexFromKey regex argument 1`] = `/\\.\\*Handler/i`;

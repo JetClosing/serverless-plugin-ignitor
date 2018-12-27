@@ -17,7 +17,7 @@ const exists = (filename) => fs.existsSync(filename);
 module.exports = {
   mkdir,
   rm,
-  read, 
+  read,
   write,
   exists,
   cli,

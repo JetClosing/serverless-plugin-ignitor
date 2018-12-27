@@ -18,11 +18,11 @@ describe('fileUtils', () => {
   test('test basic file operations', () => {
     mkdir(testDir);
 
-    expect(exists(testDir));
+    expect(exists(testDir)).toBeTruthy();
 
     write(testFile, testContent);
 
-    expect(exists(testFile));
+    expect(exists(testFile)).toBeTruthy();
 
     const content = read(testFile);
     expect(content).toEqual(testContent);
@@ -36,4 +36,4 @@ describe('fileUtils', () => {
 test('test cli', () => {
   const echoResponse = cli('echo "Hello"').toString('utf8');
   expect(echoResponse.trim()).toEqual('Hello');
-}); 
+});

@@ -7,7 +7,7 @@ describe('deploy', () => {
   test('default path', () => {
     deploy.deploy('hello', { ignitor: true }, 'beta');
     jest.advanceTimersByTime(2000);
-    expect(cli).toHaveBeenCalledWith(`sls invoke -f hello --data '{"ignitor":true}' -s beta`);
+    expect(cli).toHaveBeenCalledWith('sls invoke -f hello --data \'{"ignitor":true}\' -s beta');
   });
 
   test('no functionName', () => {

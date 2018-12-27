@@ -11,5 +11,5 @@ const goodbye = (event, context, callback) => {
 
 module.exports = {
   hello,
-  goodbye
+  goodbye,
 };

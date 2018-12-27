@@ -1,4 +1,4 @@
-const { 
+const {
   build,
   buildRegexFromKey,
   buildScheduledEvent,
@@ -6,11 +6,11 @@ const {
 } = require('../optionUtils');
 
 const MOCK_DEFAULT_SCHEDULE = {
-  enabled: true, 
+  enabled: true,
   input: {
     ignitor: true,
-  }, 
-  rate: "rate(5 minutes)",
+  },
+  rate: 'rate(5 minutes)',
 };
 
 const MOCK_SLS_FUNCTIONS = ['hello', 'goodbye', 'authHandler'];
@@ -29,44 +29,44 @@ describe('buildScheduledEvent', () => {
   test('true argument - gives default', () => {
     const response = buildScheduledEvent(true);
     expect(response).toEqual({
-      enabled: true, 
+      enabled: true,
       input: {
         ignitor: true,
-      }, 
-      rate: "rate(5 minutes)",
+      },
+      rate: 'rate(5 minutes)',
     });
   });
 
   test('no argument - gives default', () => {
     const response = buildScheduledEvent(null);
     expect(response).toEqual({
-      enabled: true, 
+      enabled: true,
       input: {
         ignitor: true,
-      }, 
-      rate: "rate(5 minutes)",
+      },
+      rate: 'rate(5 minutes)',
     });
   });
 
   test('null argument - gives default', () => {
     const response = buildScheduledEvent(null);
     expect(response).toEqual({
-      enabled: true, 
+      enabled: true,
       input: {
         ignitor: true,
-      }, 
-      rate: "rate(5 minutes)",
+      },
+      rate: 'rate(5 minutes)',
     });
   });
 
   test('undefined argument - gives default', () => {
     const response = buildScheduledEvent(null);
     expect(response).toEqual({
-      enabled: true, 
+      enabled: true,
       input: {
         ignitor: true,
-      }, 
-      rate: "rate(5 minutes)",
+      },
+      rate: 'rate(5 minutes)',
     });
   });
 
@@ -208,16 +208,16 @@ describe('build', () => {
     const response = build(options, MOCK_SLS_FUNCTIONS);
     expect(response).toEqual([
       {
-        name: "hello",
+        name: 'hello',
         schedule: {
           enabled: true,
           input: {
             ignitor: true,
           },
-          rate: "rate(5 minutes)",
+          rate: 'rate(5 minutes)',
         },
-        wrapper: "src/wrappers.ping",
-      }
+        wrapper: 'src/wrappers.ping',
+      },
     ]);
   });
 });

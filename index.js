@@ -1,4 +1,5 @@
-'use strict';
+
+
 const bPromise = require('bluebird');
 
 const build = require('./libs/build');
@@ -21,7 +22,7 @@ class IgnitorPlugin {
       ignitor: {
         usage: 'Keep lambda functions nice and toasty',
         lifecycleEvents: [
-          'ignitor'
+          'ignitor',
         ],
         commands: {
           schedule: {
@@ -103,10 +104,11 @@ class IgnitorPlugin {
     const ignitorOptions = this.sls.service.custom.ignitor;
 
     // TODO: legacy options, force migrate to new API
-    if (ignitorOptions.hasOwnProperty('functions')) {
-      throw new Error(`serverless-plugin-ignitor API has changed, please update any custom variable declarations`);
+    const { functions } = ignitorOptions;
+    if (functions) {
+      throw new Error('serverless-plugin-ignitor API has changed, please update any custom variable declarations');
     }
-    
+
     return optionUtils.build(ignitorOptions, this.slsFunctions);
   }
 
@@ -121,13 +123,13 @@ class IgnitorPlugin {
       }
 
       // this looks a little funny but we need to maintain the 'schedule' property name
-      this.slsFunctionsRef[name].events.push({ schedule: schedule });
+      this.slsFunctionsRef[name].events.push({ schedule });
     }
   }
 
   wrap() {
     const options = this.options();
-    
+
     this.sls.cli.log('Wrapping ignitor functions...');
     for (const option of options) {
       const { name, wrapper } = option;
@@ -153,7 +155,6 @@ class IgnitorPlugin {
       deploy.deploy(name, input, this.stage);
     }
   }
-  
 }
 
 module.exports = IgnitorPlugin;

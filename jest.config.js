@@ -24,5 +24,4 @@ module.exports = {
       lines: 90,
     },
   },
-
 };

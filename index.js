@@ -12,6 +12,8 @@ class IgnitorPlugin {
     this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
 
+    this.provider = this.sls.getProvider('aws');
+
     // if this is a local invoke, don't wrap EVERYTHING
     // provide a short list of the function being called
     const localOptions = options.f || options.function;

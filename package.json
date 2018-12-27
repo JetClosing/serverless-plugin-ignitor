@@ -1,6 +1,6 @@
 {
   "name": "serverless-plugin-ignitor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Keep lambda functions nice and toasty",
   "repository": "https://github.com/JetClosing/serverless-plugin-ignitor.git",
   "main": "index.js",
@@ -16,7 +16,8 @@
     "lambda",
     "node",
     "deploy",
-    "serverless"
+    "serverless",
+    "serverless-plugin"
   ],
   "license": "MIT",
   "devDependencies": {

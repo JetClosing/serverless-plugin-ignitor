@@ -71,7 +71,7 @@ plugins:
 ```
 
 #### Custom Schedule
-If you want to build a custom schedule instead of the default ignitor schedule, it requires an `input` property. This is because the `input` will be used as data during post-deployment invocation. 
+If you want to build a custom schedule instead of the default ignitor schedule, it requires an `input` property. This is because the `input` will be used as an event during post-deployment invocation. 
 
 #### Custom Wrapper
 If you want to build a custom wrapper instead of the default ignitor wrapper, it needs to be written like a higher-order-function. 
@@ -80,7 +80,7 @@ Example:
 ```
 // wrappers.js
 const logger = (original) => (evt, ctx, cb) => {
-  console.log('Invoked @', Date.now(), 'with', JSON.stringify(evt, null, 2));
+  console.log('Logging event data:', JSON.stringify(evt, null, 2));
   return original(evt, ctx, cb);
 }
 

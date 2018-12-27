@@ -44,6 +44,7 @@ const buildOption = (key, option, slsFunctions) => {
   const schedule = buildScheduledEvent(option.schedule);
   const matches = slsFunctions.filter((slsFunctions) => slsFunctions.match(matcher));
   if (matches.length === 0) {
+    console.warn(`No matches found for key ${key}`);
     return [];
   }
   return matches.map((name) => ({

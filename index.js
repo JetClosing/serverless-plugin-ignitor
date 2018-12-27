@@ -14,11 +14,8 @@ class IgnitorPlugin {
 
     this.provider = this.sls.getProvider('aws');
 
-    // if this is a local invoke, don't wrap EVERYTHING
-    // provide a short list of the function being called
-    const localOptions = options.f || options.function;
-    this.slsFunctions = localOptions ? [localOptions] : Object.keys(this.sls.service.functions);
-    this.slsFunctionsRef = this.sls.service.functions;
+    // save this for later use
+    this.localOptions = options.f || options.function;
 
     this.commands = {
       ignitor: {
@@ -99,6 +96,10 @@ class IgnitorPlugin {
   }
 
   options() {
+    // if this is a local invoke, don't wrap EVERYTHING
+    // provide a short list of the function being called
+    this.slsFunctionsRef = this.sls.service.functions;
+    this.slsFunctions = this.localOptions ? [this.localOptions] : Object.keys(this.slsFunctionsRef);
     const ignitorOptions = this.sls.service.custom.ignitor;
 
     // TODO: legacy options, force migrate to new API

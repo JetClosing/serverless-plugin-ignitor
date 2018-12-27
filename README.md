@@ -1,3 +1,6 @@
+![npm downloads total](https://img.shields.io/npm/dt/serverless-plugin-ignitor.svg) ![npm version](https://img.shields.io/npm/v/serverless-plugin-ignitor.svg) ![npm license](https://img.shields.io/npm/l/serverless-plugin-ignitor.svg)
+[![Build Status](https://travis-ci.com/JetClosing/serverless-plugin-ignitor.svg?branch=master)](https://travis-ci.com/JetClosing/serverless-plugin-ignitor)
+
 ## Installation
 
 ```sh

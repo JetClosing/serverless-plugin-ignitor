@@ -100,6 +100,12 @@ class IgnitorPlugin {
 
   options() {
     const ignitorOptions = this.sls.service.custom.ignitor;
+
+    // TODO: legacy options, force migrate to new API
+    if (ignitorOptions.hasOwnProperty('functions')) {
+      throw new Error(`serverless-plugin-ignitor API has changed, please update any custom variable declarations`);
+    }
+    
     return optionUtils.build(ignitorOptions, this.slsFunctions);
   }
 

@@ -1,3 +1,6 @@
+![npm downloads total](https://img.shields.io/npm/dt/serverless-plugin-ignitor.svg) ![npm version](https://img.shields.io/npm/v/serverless-plugin-ignitor.svg) ![npm license](https://img.shields.io/npm/l/serverless-plugin-ignitor.svg)
+[![Build Status](https://travis-ci.com/JetClosing/serverless-plugin-ignitor.svg?branch=master)](https://travis-ci.com/JetClosing/serverless-plugin-ignitor)
+
 ## Installation
 
 ```sh
@@ -28,29 +31,62 @@ By default all functions will then be automatically scheduled, wrapped to accept
 
 ## Options
 
-The plugin provides the following configurations.
+The plugin provides the following configurations per matching keys.
 
 | Option | Values | Default | Description  |
 | :--- | :--- | :--- | :--- |
-| `schedule` | Boolean | true | Control whether the lambda should be ignited every 5 minutes |
-| `functions` | mixed[], String or RegExp | ['/.*/'] | Which functions to perform wrapping, and immediate calls to post-deployment |
+| `schedule` | Boolean or Object | null | Controls whether the lambda should be schedule |
+| `wrapper` | String | null | The file path where a custom wrapper exists (same as a function handler definition) |
 
 #### Options Example
 
 ```yaml
 custom: 
   ignitor:
-    schedule: false # do not schedule events
-    functions:
-      - /hello/ # only wrap functions listed
+    hello:
+      wrapper: wrappers.logger
+      schedule:
+        rate: rate(3 minutes)
+        enabled: true
+        input: 
+          source: 'logger'
+
+    # regular expressions can be used
+    /good.*/: 
+      schedule: false 
+      
+    /non-matching/:
+      schedule: true
 
 functions:
   hello:
-    handler: src/hello.handler
-    timeout: 15
+    handler: handlers.hello
+    timeout: 10
+  goodbye:
+    handler: handlers.goodbye
 
 plugins:
   - serverless-plugin-ignitor
+  - serverless-webpack
+```
+
+#### Custom Schedule
+If you want to build a custom schedule instead of the default ignitor schedule, it requires an `input` property. This is because the `input` will be used as an event during post-deployment invocation. 
+
+#### Custom Wrapper
+If you want to build a custom wrapper instead of the default ignitor wrapper, it needs to be written like a higher-order-function. 
+
+Example:
+```
+// wrappers.js
+const logger = (original) => (evt, ctx, cb) => {
+  console.log('Logging event data:', JSON.stringify(evt, null, 2));
+  return original(evt, ctx, cb);
+}
+
+module.exports = {
+  logger,
+};
 ```
 
 ## Plugin Conflicts

@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`wrap use default wrapper 1`] = `
+"const { default } = require('../src/handler');
+const { ignitor } = require('./ignitor');
+
+module.exports = { default: ignitor(default) };"
+`;
+
+exports[`wrap uses override wrapper 1`] = `
+"const { default } = require('../src/handler');
+const { auth } = require('../src/wrappers');
+
+module.exports = { default: auth(default) };"
+`;

@@ -1,0 +1,4 @@
+**/node_modules/**
+**/ignitor/**
+coverage/*
+example/webpack.config.js

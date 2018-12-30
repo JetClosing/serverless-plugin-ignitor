@@ -4,6 +4,12 @@ const hello = (event, context, callback) => {
   callback(null, 'success');
 };
 
+const goodbye = (event, context, callback) => {
+  console.log('goodbye!');
+  callback(null, 'success');
+};
+
 module.exports = {
-  hello: hello,
+  hello,
+  goodbye,
 };

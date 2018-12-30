@@ -6,11 +6,10 @@ const build = require('./libs/build');
 const deploy = require('./libs/deploy');
 const optionUtils = require('./libs/optionUtils');
 
-class IgnitorPlugin {
+class PluginIgnitor {
   constructor(sls, options) {
     this.sls = sls;
     this.stage = options.stage;
-    this.verbose = options.v;
     this.originalServicePath = this.sls.config.servicePath;
 
     this.provider = this.sls.getProvider('aws');
@@ -81,6 +80,12 @@ class IgnitorPlugin {
       'after:run:run': () => bPromise.bind(this)
         .then(() => this.sls.pluginManager.spawn('ignitor:clean')),
 
+      // used when debugging ignitor via command serverless ignitor
+      'ignitor:ignitor': () => bPromise.bind(this)
+        .then(build.prebuild)
+        .then(() => this.wrap(true))
+        .then(() => this.schedule(true)),
+
       'ignitor:schedule:schedule': () => bPromise.bind(this)
         .then(this.schedule),
 
@@ -101,7 +106,8 @@ class IgnitorPlugin {
     // provide a short list of the function being called
     this.slsFunctionsRef = this.sls.service.functions;
     this.slsFunctions = this.localOptions ? [this.localOptions] : Object.keys(this.slsFunctionsRef);
-    const ignitorOptions = this.sls.service.custom.ignitor;
+    const customVariable = this.sls.service.custom || {};
+    const ignitorOptions = customVariable.ignitor || {};
 
     // TODO: legacy options, force migrate to new API
     const { functions } = ignitorOptions;
@@ -112,7 +118,7 @@ class IgnitorPlugin {
     return optionUtils.build(ignitorOptions, this.slsFunctions);
   }
 
-  schedule() {
+  schedule(debug = false) {
     const options = this.options();
 
     this.sls.cli.log('Scheduling ignitor functions...');
@@ -122,12 +128,16 @@ class IgnitorPlugin {
         continue;
       }
 
+      if (debug) {
+        console.log(`${name} schedule: ${JSON.stringify(schedule, null, 2)}`);
+      }
+
       // this looks a little funny but we need to maintain the 'schedule' property name
       this.slsFunctionsRef[name].events.push({ schedule });
     }
   }
 
-  wrap() {
+  wrap(debug = false) {
     const options = this.options();
 
     this.sls.cli.log('Wrapping ignitor functions...');
@@ -135,9 +145,9 @@ class IgnitorPlugin {
       const { name, wrapper } = option;
 
       const { handler } = this.slsFunctionsRef[name];
-      this.sls.cli.log(`Wrapped ${handler}`);
+      this.slsFunctionsRef[name].handler = build.wrap(name, handler, wrapper, debug);
 
-      this.slsFunctionsRef[name].handler = build.wrap(name, handler, wrapper, this.verbose);
+      this.sls.cli.log(`Wrapped ${handler}`);
     }
   }
 
@@ -157,4 +167,4 @@ class IgnitorPlugin {
   }
 }
 
-module.exports = IgnitorPlugin;
+module.exports = PluginIgnitor;

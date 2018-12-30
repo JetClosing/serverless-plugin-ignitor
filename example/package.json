@@ -5,7 +5,8 @@
   "scripts": {
     "deploy": "serverless deploy",
     "local:hello": "serverless invoke local --function hello -p fixtures/ignitor.json",
-    "local:goodbye": "serverless invoke local -f goodbye"
+    "local:goodbye": "serverless invoke local -f goodbye",
+    "debug": "serverless ignitor"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",

@@ -1,0 +1,14 @@
+# example data
+example/
+README.md
+
+# hidden prefixed files
+.**
+
+# test specific 
+jest.config.js
+**/__tests__
+coverage/
+
+# artifacts
+yarn.lock

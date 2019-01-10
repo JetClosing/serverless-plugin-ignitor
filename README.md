@@ -71,7 +71,7 @@ plugins:
 ```
 
 #### Custom Schedule
-If you want to build a custom schedule instead of the default ignitor schedule, it requires an `input` property. This is because the `input` will be used as an event during post-deployment invocation. 
+If you want to build a custom schedule and do not include a custom `input` event, the default ignitor event will be used. 
 
 #### Custom Wrapper
 If you want to build a custom wrapper instead of the default ignitor wrapper, it needs to be written like a higher-order-function. 

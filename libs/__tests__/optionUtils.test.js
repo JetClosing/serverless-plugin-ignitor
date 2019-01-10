@@ -87,17 +87,15 @@ describe('buildScheduledEvent', () => {
     expect(response).toEqual(schedule);
   });
 
-  test('override without input - error', () => {
-    expect.assertions(1);
+  test('override without input - default event', () => {
     const schedule = {
       enabled: true,
       rate: 'rate(3 minutes)',
     };
-    try {
-      buildScheduledEvent(schedule);
-    } catch (e) {
-      expect(e.message).toEqual('Using a custom schedule requires a custom input defintion');
-    }
+    const response = buildScheduledEvent(schedule);
+    expect(response.input).toEqual({
+      ignitor: true,
+    });
   });
 });
 
@@ -172,19 +170,17 @@ describe('buildOption', () => {
     expect(first.schedule).toEqual(options.schedule);
   });
 
-  test('invalid schedule override', () => {
-    expect.assertions(1);
+  test('invalid schedule input - use default', () => {
     const options = {
       schedule: {
         rate: 'rate(3 minutes)',
         enabled: true,
       },
     };
-    try {
-      buildOption('/.*handler/i', options, MOCK_SLS_FUNCTIONS);
-    } catch (e) {
-      expect(e.message).toEqual('Using a custom schedule requires a custom input defintion');
-    }
+    const [response] = buildOption('/.*handler/i', options, MOCK_SLS_FUNCTIONS);
+    expect(response.schedule.input).toEqual({
+      ignitor: true,
+    });
   });
 
   test('no match', () => {

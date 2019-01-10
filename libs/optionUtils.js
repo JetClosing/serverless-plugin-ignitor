@@ -1,11 +1,13 @@
 
 
+const DEFAULT_EVENT = {
+  ignitor: true,
+};
+
 const DEFAULT_SCHEDULE = {
   rate: 'rate(5 minutes)',
   enabled: true,
-  input: {
-    ignitor: true,
-  },
+  input: DEFAULT_EVENT,
 };
 
 const DEFAULT_OPTIONS = {
@@ -31,7 +33,8 @@ const buildScheduledEvent = (schedule) => {
   }
 
   if (typeof schedule === 'object' && !schedule.hasOwnProperty('input')) {
-    throw new Error('Using a custom schedule requires a custom input defintion');
+    // eslint-disable-next-line
+    schedule.input = DEFAULT_EVENT;
   }
   // if the user sets schedule to false, that's fine, this will only inject
   // the schedule if the schedule value is truthy anyway, otherwise if they have

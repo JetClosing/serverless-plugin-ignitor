@@ -35,7 +35,7 @@ The plugin provides the following configurations per matching keys.
 
 | Option | Values | Default | Description  |
 | :--- | :--- | :--- | :--- |
-| `schedule` | Boolean or Object | null | Controls whether the lambda should be schedule |
+| `schedule` | Boolean or Object | null | Controls whether the lambda should be scheduled |
 | `wrapper` | String | null | The file path where a custom wrapper exists (same as a function handler definition) |
 
 #### Options Example

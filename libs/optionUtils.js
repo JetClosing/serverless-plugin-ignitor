@@ -11,7 +11,9 @@ const DEFAULT_SCHEDULE = {
 };
 
 const DEFAULT_OPTIONS = {
-  '.*': {},
+  '.*': {
+    schedule: true,
+  },
 };
 
 const buildRegexFromKey = (key) => {

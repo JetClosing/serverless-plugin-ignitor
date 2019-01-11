@@ -107,10 +107,10 @@ class PluginIgnitor {
     this.slsFunctionsRef = this.sls.service.functions;
     this.slsFunctions = this.localOptions ? [this.localOptions] : Object.keys(this.slsFunctionsRef);
     const customVariable = this.sls.service.custom || {};
-    const ignitorOptions = customVariable.ignitor || {};
+    const ignitorOptions = customVariable.ignitor;
 
     // TODO: legacy options, force migrate to new API
-    const { functions } = ignitorOptions;
+    const { functions } = ignitorOptions || {};
     if (functions) {
       throw new Error('serverless-plugin-ignitor API has changed, please update any custom variable declarations');
     }
@@ -149,6 +149,8 @@ class PluginIgnitor {
 
       this.sls.cli.log(`Wrapped ${handler}`);
     }
+
+    throw new Error("no");
   }
 
   deploy() {

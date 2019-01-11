@@ -22,14 +22,14 @@ const wrap = (name, handler, wrapper = DEFAULT_WRAPPER, debug) => {
   const [wrapperPath, wrapperFunctionName] = wrapper.split('.');
   const [inputPath, functionName] = handler.split('.');
 
-  const overridePath = `${BUILD_DIR}/${name}.default`;
+  const overridePath = `${BUILD_DIR}/${name}.handler`;
   const overrideFilename = `${name}.js`;
   const outputPath = path.resolve(BUILD_DIR, overrideFilename);
 
-  const requireOriginal = `const { ${functionName} } = require('../${inputPath}');`;
+  const requireOriginal = `const original = require('../${inputPath}').${functionName};`;
   const requireWrapperPrefix = wrapper === DEFAULT_WRAPPER ? '.' : '..';
-  const requireWrapper = `const { ${wrapperFunctionName} } = require('${requireWrapperPrefix}/${wrapperPath}');`;
-  const exportModule = `module.exports = { default: ${wrapperFunctionName}(${functionName}) };`;
+  const requireWrapper = `const wrapper = require('${requireWrapperPrefix}/${wrapperPath}').${wrapperFunctionName};`;
+  const exportModule = `module.exports = { handler: wrapper(original) };`;
 
   write(outputPath, `${requireOriginal}\n${requireWrapper}\n\n${exportModule}`);
   if (debug) {

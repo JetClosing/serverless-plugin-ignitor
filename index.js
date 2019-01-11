@@ -149,8 +149,6 @@ class PluginIgnitor {
 
       this.sls.cli.log(`Wrapped ${handler}`);
     }
-
-    throw new Error("no");
   }
 
   deploy() {

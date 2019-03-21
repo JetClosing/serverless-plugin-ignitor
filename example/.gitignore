@@ -1,4 +1,5 @@
 .serverless
+.serverless_plugins
 /node_modules/
 
 # Ignore ignitor

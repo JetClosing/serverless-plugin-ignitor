@@ -2,17 +2,33 @@
 
 const bPromise = require('bluebird');
 
+const { cli } = require('./libs/file');
 const build = require('./libs/build');
-const deploy = require('./libs/deploy');
-const optionUtils = require('./libs/optionUtils');
+const log = require('./libs/log');
+const get = require('./libs/get');
+const delegate = require('./libs/delegate');
 
 class PluginIgnitor {
   constructor(sls, options) {
     this.sls = sls;
-    this.stage = options.stage;
+    this.optStage = options.stage;
     this.originalServicePath = this.sls.config.servicePath;
 
     this.provider = this.sls.getProvider('aws');
+
+    // trick sls into seeing the late-lambda creation
+    this.sls.service.functions.ignitorDelegate = {
+      handler: 'ignitor/delegate.handler',
+      timeout: 30,
+      events: [],
+      iamRoleStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['lambda:InvokeFunction'],
+          Resource: '*',
+        },
+      ],
+    };
 
     // save this for later use
     this.localOptions = options.f || options.function;
@@ -83,8 +99,8 @@ class PluginIgnitor {
       // used when debugging ignitor via command serverless ignitor
       'ignitor:ignitor': () => bPromise.bind(this)
         .then(build.prebuild)
-        .then(() => this.wrap(true))
-        .then(() => this.schedule(true)),
+        .then(() => this.schedule(true))
+        .then(() => this.wrap(true)),
 
       'ignitor:schedule:schedule': () => bPromise.bind(this)
         .then(this.schedule),
@@ -101,68 +117,74 @@ class PluginIgnitor {
     };
   }
 
-  options() {
-    // if this is a local invoke, don't wrap EVERYTHING
-    // provide a short list of the function being called
-    this.slsFunctionsRef = this.sls.service.functions;
-    this.slsFunctions = this.localOptions ? [this.localOptions] : Object.keys(this.slsFunctionsRef);
-    const customVariable = this.sls.service.custom || {};
-    const ignitorOptions = customVariable.ignitor;
+  schedule() {
+    const options = get(this, 'sls.service.custom.ignitor', []);
+    const keys = options.length === 0
+      ? new RegExp('.*', 'g')
+      : new RegExp(
+        options.map((k) => k.replace(/\//g, '')).join('|'),
+        'g',
+      );
 
-    // TODO: legacy options, force migrate to new API
-    const { functions } = ignitorOptions || {};
-    if (functions) {
-      throw new Error('serverless-plugin-ignitor API has changed, please update any custom variable declarations');
-    }
-
-    return optionUtils.build(ignitorOptions, this.slsFunctions);
+    this.service = get(this, 'sls.service.service.name', get(this, 'sls.service.service'));
+    this.stage = get(this, 'optStage', get(this, 'sls.service.provider.stage', '*'));
+    this.scheduled = Object.keys(this.sls.service.functions)
+      .filter((name) => name.match(keys));
   }
 
-  schedule(debug = false) {
-    const options = this.options();
+  wrap() {
+    this.mapping = {};
 
-    this.sls.cli.log('Scheduling ignitor functions...');
-    for (const option of options) {
-      const { schedule, name } = option;
-      if (!schedule) {
-        continue;
+    const defaultEvent = {
+      rate: 'rate(5 minutes)',
+      wrapper: 'ignitor.ignitor',
+      input: {
+        ignitor: true,
+      },
+    };
+    const { functions } = this.sls.service;
+    this.scheduled.map((name) => {
+      const config = {
+        ...defaultEvent,
+        ...functions[name].ignitor,
+      };
+      const { rate, wrapper, input } = config;
+      if (!this.mapping[rate]) {
+        this.mapping[rate] = [];
       }
 
-      if (debug) {
-        console.log(`${name} schedule: ${JSON.stringify(schedule, null, 2)}`);
-      }
+      this.mapping[rate].push({
+        lambda: functions[name].name,
+        input,
+      });
 
-      // this looks a little funny but we need to maintain the 'schedule' property name
-      this.slsFunctionsRef[name].events.push({ schedule });
-    }
-  }
+      const { handler } = functions[name];
+      functions[name].handler = build.wrap(name, handler, wrapper, false);
+      log(`Wrapped ${handler}`, JSON.stringify(functions[name], null, 2));
+    });
 
-  wrap(debug = false) {
-    const options = this.options();
-
-    this.sls.cli.log('Wrapping ignitor functions...');
-    for (const option of options) {
-      const { name, wrapper } = option;
-
-      const { handler } = this.slsFunctionsRef[name];
-      this.slsFunctionsRef[name].handler = build.wrap(name, handler, wrapper, debug);
-
-      this.sls.cli.log(`Wrapped ${handler}`);
-    }
+    const delegateCode = delegate.create(this.mapping);
+    build.writeToBuildDir('delegate.js', delegateCode);
+    functions.ignitorDelegate.events = delegate.events(this.mapping);
   }
 
   deploy() {
-    const options = this.options();
+    const rates = Object.keys(this.mapping);
 
-    for (const option of options) {
-      const { schedule, name } = option;
-      if (!schedule) {
-        continue;
-      }
-
-      this.sls.cli.log(`Igniting source ${name}`);
-      const { input } = schedule;
-      deploy.deploy(name, input, this.stage);
+    log('Igniting sources');
+    for (const rate of rates) {
+      const event = { rate };
+      const cmd = [
+        'aws lambda invoke',
+        `--function-name '${this.service}-${this.stage}-ignitorDelegate'`,
+        '--invocation-type Event',
+        `--payload '${JSON.stringify(event)}'`,
+        '.output',
+      ];
+      cli(cmd.join(' '), {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      });
     }
   }
 }

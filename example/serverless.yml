@@ -1,20 +1,9 @@
-service: serverless-plugin-ignitor-example
+service: Example
 
 custom: 
   ignitor:
-    hello:
-      wrapper: wrappers.logger
-      schedule:
-        rate: rate(5 minutes)
-        enabled: true
-        input: 
-          source: 'logger'
-
-    /good.*/:
-      schedule: false
-
-    /non-matching/:
-      schedule: true
+    - hello
+    - /good.*/
       
   webpack:
     includeModules: false
@@ -31,9 +20,20 @@ functions:
   hello:
     handler: handlers.hello
     timeout: 10
+    ignitor:
+      rate: 'rate(3 minutes)'
+
   goodbye:
     handler: handlers.goodbye
+    ignitor:
+      wrapper: customWrapper.default
+      input:
+        custom: 'property'
+
+  ignored:
+    handler: handlers.goodbye # re-used for brevity
 
 plugins:
   - serverless-plugin-ignitor
+  - serverless-plugin-custom-roles
   - serverless-webpack

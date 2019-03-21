@@ -30,6 +30,8 @@
     "jest": "^23.6.0"
   },
   "dependencies": {
-    "bluebird": "^3.5.3"
+    "aws-sdk": "^2.426.0",
+    "bluebird": "^3.5.3",
+    "handlebars": "^4.1.1"
   }
 }

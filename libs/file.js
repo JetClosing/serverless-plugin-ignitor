@@ -8,9 +8,7 @@ const read = (filename) => fs.readFileSync(filename, 'utf8');
 
 const mkdir = (filename) => cli(`mkdir -p ${filename}`);
 
-const write = (filename, data) => {
-  fs.writeFileSync(filename, data);
-};
+const write = (filename, data) => fs.writeFileSync(filename, data);
 
 const exists = (filename) => fs.existsSync(filename);
 

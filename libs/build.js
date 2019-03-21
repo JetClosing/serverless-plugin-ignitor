@@ -1,7 +1,7 @@
 const path = require('path');
 const {
   mkdir, rm, write, read,
-} = require('./fileUtils');
+} = require('./file');
 
 // !!WARNING!! Do not include a '.' in the directory name this confuses
 // sls during local invokes and compilers with a MODULE_NOT_FOUND error
@@ -29,7 +29,7 @@ const wrap = (name, handler, wrapper = DEFAULT_WRAPPER, debug) => {
   const requireOriginal = `const original = require('../${inputPath}').${functionName};`;
   const requireWrapperPrefix = wrapper === DEFAULT_WRAPPER ? '.' : '..';
   const requireWrapper = `const wrapper = require('${requireWrapperPrefix}/${wrapperPath}').${wrapperFunctionName};`;
-  const exportModule = `module.exports = { handler: wrapper(original) };`;
+  const exportModule = 'module.exports = { handler: wrapper(original) };';
 
   write(outputPath, `${requireOriginal}\n${requireWrapper}\n\n${exportModule}`);
   if (debug) {
@@ -39,10 +39,16 @@ const wrap = (name, handler, wrapper = DEFAULT_WRAPPER, debug) => {
   return overridePath;
 };
 
+const writeToBuildDir = (name, contents) => {
+  const fileName = path.resolve(BUILD_DIR, name);
+  write(fileName, contents);
+};
+
 const clean = () => rm(BUILD_DIR);
 
 module.exports = {
   prebuild,
   wrap,
+  writeToBuildDir,
   clean,
 };

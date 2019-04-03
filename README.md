@@ -29,52 +29,49 @@ plugins:
 
 By default all functions will then be automatically scheduled, wrapped to accept scheduled events, and immediately invoked post-deployment. If you want more granular control, options can be configured within a custom ignitor variable.
 
-## Options
+## Custom Declaration
+In case your project doesn't require all of your lambdas to be warm, you can list the name of a specific lambda or use regular expressions declared in the custom level variables.
 
-The plugin provides the following configurations per matching keys.
+Example:
+```
+custom:
+  ignitor:
+    - hello
+    - /good.*/ 
+```
+
+The above example will keep the function `hello` warm as well as functions prefixed with the name `good`. If there are no lambdas that match in the declared list, nothing will be scheduled.
+
+## Lambda Configuration
+
+In order to fine-tune the rate, input, and flow of your code, lambdas are configured on a per-lambda basis using the field `ignitor`
 
 | Option | Values | Default | Description  |
 | :--- | :--- | :--- | :--- |
-| `schedule` | Boolean or Object | null | Controls whether the lambda should be scheduled |
+| `rate` | AWS rate | 5 minutes | How often the lambda is to be called |
 | `wrapper` | String | null | The file path where a custom wrapper exists (same as a function handler definition) |
+| `input` | Object | { ignitor: true } | The event the lambda receives, when it is pinged |
 
 #### Options Example
 
 ```yaml
-custom: 
-  ignitor:
-    hello:
-      wrapper: wrappers.logger
-      schedule:
-        rate: rate(3 minutes)
-        enabled: true
-        input: 
-          source: 'logger'
-
-    # regular expressions can be used
-    /good.*/: 
-      schedule: false 
-      
-    /non-matching/:
-      schedule: true
-
 functions:
   hello:
     handler: handlers.hello
     timeout: 10
+    ignitor: 
+      rate: 'rate(3 minutes)'
+      
   goodbye:
     handler: handlers.goodbye
-
-plugins:
-  - serverless-plugin-ignitor
-  - serverless-webpack
+    ignitor:
+      wrapper: wrapper.logger
+      input:
+        custom: 'property'
 ```
 
-#### Custom Schedule
-If you want to build a custom schedule and do not include a custom `input` event, the default ignitor event will be used. 
-
-#### Custom Wrapper
-If you want to build a custom wrapper instead of the default ignitor wrapper, it needs to be written like a higher-order-function. 
+#### Custom Wrapper(s)
+If you want to build a custom wrapper instead of the default ignitor wrapper, it needs to be written as a higher-order-function. 
 
 Example:
 ```

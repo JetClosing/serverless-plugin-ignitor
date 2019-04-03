@@ -4,6 +4,7 @@
 
 # Ignore ignitor
 ignitor
+.output
 
 # Ignore webpack
 .webpack

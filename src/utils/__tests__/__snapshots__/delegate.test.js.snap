@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`create schedules 1`] = `
+Array [
+  Object {
+    "schedule": Object {
+      "enabled": true,
+      "input": Object {
+        "rate": "rate(3 minutes)",
+      },
+      "rate": "rate(3 minutes)",
+    },
+  },
+]
+`;
+
+exports[`creates delegate 1`] = `
+"const AWS = require('aws-sdk');
+
+const L = new AWS.Lambda({ apiVersion: '2015-03-31' });
+
+const map = {
+  \\"rate(3 minutes)\\": [
+    {
+      \\"lambda\\": \\"Example-dev-hello\\",
+      \\"input\\": {
+        \\"ignitor\\": true
+      }
+    }
+  ]
+};
+
+const delegate = (evt, ctx, callback) => {
+  console.log('Event', JSON.stringify(evt, null, 2));
+  if (!evt.rate) {
+    throw new Error('No rate found to delegate');
+  }
+
+  const listeners = (map[evt.rate] || []);
+  console.log('listeners', JSON.stringify(listeners, null, 2));
+  Promise.all(
+    listeners
+      .map(({ lambda, input }) => L.invoke({
+        FunctionName: lambda,
+        InvocationType: 'Event',
+        Payload: JSON.stringify(input),
+      }).promise())
+  ).then((res) => {
+    callback(null, { success: true });
+  })
+  .catch((err) => {
+    callback(err.message);
+  });
+};
+
+module.exports = {
+  handler: delegate,
+};"
+`;

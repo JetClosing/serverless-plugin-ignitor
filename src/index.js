@@ -2,16 +2,18 @@
 
 const bPromise = require('bluebird');
 
-const { cli } = require('./libs/file');
-const build = require('./libs/build');
-const log = require('./libs/log');
-const get = require('./libs/get');
-const delegate = require('./libs/delegate');
+const { cli } = require('./utils/file');
+const build = require('./utils/build');
+const log = require('./utils/log');
+const get = require('./utils/get');
+const delegate = require('./utils/delegate');
+const role = require('./utils/role');
 
 class PluginIgnitor {
   constructor(sls, options) {
     this.sls = sls;
     this.optStage = options.stage;
+    this.optRegion = options.region;
     this.originalServicePath = this.sls.config.servicePath;
 
     this.provider = this.sls.getProvider('aws');
@@ -21,17 +23,7 @@ class PluginIgnitor {
       handler: 'ignitor/delegate.handler',
       timeout: 30,
       events: [],
-      iamRoleStatements: [
-        {
-          Effect: 'Allow',
-          Action: ['lambda:InvokeFunction'],
-          Resource: '*',
-        },
-      ],
     };
-
-    // save this for later use
-    this.localOptions = options.f || options.function;
 
     this.commands = {
       ignitor: {
@@ -68,6 +60,7 @@ class PluginIgnitor {
       },
     };
 
+    /* istanbul ignore next */
     this.hooks = {
       'after:deploy:deploy': () => bPromise.bind(this)
         .then(() => this.sls.pluginManager.spawn('ignitor:deploy'))
@@ -99,8 +92,8 @@ class PluginIgnitor {
       // used when debugging ignitor via command serverless ignitor
       'ignitor:ignitor': () => bPromise.bind(this)
         .then(build.prebuild)
-        .then(() => this.schedule(true))
-        .then(() => this.wrap(true)),
+        .then(this.schedule)
+        .then(this.wrap),
 
       'ignitor:schedule:schedule': () => bPromise.bind(this)
         .then(this.schedule),
@@ -128,8 +121,19 @@ class PluginIgnitor {
 
     this.service = get(this, 'sls.service.service.name', get(this, 'sls.service.service'));
     this.stage = get(this, 'optStage', get(this, 'sls.service.provider.stage', '*'));
+    this.region = get(this, 'optRegion', get(this, 'sls.service.provider.region'));
     this.scheduled = Object.keys(this.sls.service.functions)
       .filter((name) => name.match(keys));
+
+    if (!this.sls.service.resources) {
+      this.sls.service.resources = { Resources: {} };
+    }
+
+    role.attachRoleToLambda(this.sls.service.functions.ignitorDelegate);
+    role.createLambdaRole(this.sls.service.resources.Resources, {
+      stage: this.stage,
+      service: this.service,
+    });
   }
 
   wrap() {
@@ -143,7 +147,7 @@ class PluginIgnitor {
       },
     };
     const { functions } = this.sls.service;
-    this.scheduled.map((name) => {
+    this.scheduled.forEach((name) => {
       const config = {
         ...defaultEvent,
         ...functions[name].ignitor,
@@ -163,13 +167,21 @@ class PluginIgnitor {
       log(`Wrapped ${handler}`, JSON.stringify(functions[name], null, 2));
     });
 
+    // create delegate, and inject configured mapping into the code
     const delegateCode = delegate.create(this.mapping);
     build.writeToBuildDir('delegate.js', delegateCode);
+
+    // create events for the delegate method, that will then call other lambdas
     functions.ignitorDelegate.events = delegate.events(this.mapping);
   }
 
   deploy() {
     const rates = Object.keys(this.mapping);
+
+    cli(`export AWS_DEFAULT_REGION=${this.region}`, {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+    });
 
     log('Igniting sources');
     for (const rate of rates) {

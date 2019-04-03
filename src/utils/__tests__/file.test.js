@@ -6,7 +6,7 @@ const {
   rm,
   mkdir,
   cli,
-} = require('../fileUtils');
+} = require('../file');
 
 const testDir = path.resolve(__dirname, 'test');
 

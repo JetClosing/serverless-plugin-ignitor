@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 
 const L = new AWS.Lambda({ apiVersion: '2015-03-31' });
 
-const map = {{{fml}}};
+const map = {{{rates}}};
 
 const delegate = (evt, ctx, callback) => {
   console.log('Event', JSON.stringify(evt, null, 2));

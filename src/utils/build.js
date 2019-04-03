@@ -18,7 +18,7 @@ const prebuild = () => {
   write(defaultWrapperPath, defaultWrapper);
 };
 
-const wrap = (name, handler, wrapper = DEFAULT_WRAPPER, debug) => {
+const wrap = (name, handler, wrapper = DEFAULT_WRAPPER) => {
   const [wrapperPath, wrapperFunctionName] = wrapper.split('.');
   const [inputPath, functionName] = handler.split('.');
 
@@ -32,17 +32,13 @@ const wrap = (name, handler, wrapper = DEFAULT_WRAPPER, debug) => {
   const exportModule = 'module.exports = { handler: wrapper(original) };';
 
   write(outputPath, `${requireOriginal}\n${requireWrapper}\n\n${exportModule}`);
-  if (debug) {
-    console.log(`Generated file:\n\t${outputPath}\nHandler:\n\t${handler} ...`);
-    console.log(`Overriden Handler:\n\t${overridePath}\n`);
-  }
   return overridePath;
 };
 
-const writeToBuildDir = (name, contents) => {
-  const fileName = path.resolve(BUILD_DIR, name);
-  write(fileName, contents);
-};
+const writeToBuildDir = (name, contents) => write(
+  path.resolve(BUILD_DIR, name),
+  contents,
+);
 
 const clean = () => rm(BUILD_DIR);
 

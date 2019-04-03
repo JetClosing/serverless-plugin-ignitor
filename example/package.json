@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Showing how serverless-plugin-ignitor can be used",
   "scripts": {
-    "predeploy": "./scripts/build.sh",
     "deploy": "serverless deploy",
     "local:hello": "serverless invoke local --function hello -p fixtures/ignitor.json",
     "local:goodbye": "serverless invoke local -f goodbye",
@@ -14,7 +13,7 @@
     "@babel/preset-env": "^7.2.0",
     "babel-loader": "^8.0.4",
     "serverless": "^1.35.0",
-    "serverless-plugin-custom-roles": "^1.1.0",
+    "serverless-plugin-ignitor": "../",
     "serverless-webpack": "^5.2.0",
     "webpack": "^4.28.0",
     "webpack-node-externals": "^1.7.2"

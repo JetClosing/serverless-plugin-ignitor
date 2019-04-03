@@ -1,4 +1,4 @@
-service: Example
+service: ignitor-example
 
 custom: 
   ignitor:
@@ -35,5 +35,4 @@ functions:
 
 plugins:
   - serverless-plugin-ignitor
-  - serverless-plugin-custom-roles
   - serverless-webpack
